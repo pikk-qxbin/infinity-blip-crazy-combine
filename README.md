@@ -15,13 +15,31 @@ This is a versatile feature: any multi-letter string passed as `crazy` is expand
 
 Letters are upper-cased, non-letters ignored, and duplicates removed while preserving order. Unknown letters are skipped. A single letter still behaves as the normal A-Z dial.
 
+## Pricing (additive)
+
+Each mode is priced independently using the existing crazy-mode maths, then the costs are added together.
+
+- Path base (Edge 1, Cloud max(2, ceil(cubits/5)), Mesh 10+ceil(cubits/5)) is charged once per letter.
+- Crazy add for that letter (A = +0; B-Z = +1 up to 100 Qx path, then +ceil(path/10)) is added for that letter.
+- Total = sum over every letter of (path_base + crazy_add_for_that_letter).
+
+Examples (Edge):
+
+- `Sky` = S+K+Y → 2 + 2 + 2 = 6 Qx
+- `Rupesh` = R+U+P+E+S+H → 2 × 6 = 12 Qx
+- `CRAZY` = C+R+A+Z+Y → 2 + 2 + 1 + 2 + 2 = 9 Qx (A is 1)
+
+Mesh at 8000 Qx path base, each non-A letter adds 800:
+
+- 5 modes → 5 × (8000 + 800) = 44000 Qx
+
 ## How it works
 
 - Input: any multi-letter string (or a list of letters).
 - Expansion: each letter becomes its own crazy mode (A = conventional, B-Z = unconventional tilt with its named step).
 - Generation: one Edge / Cloud / Controlled brief per letter (each with its own ROLE type and atoms).
 - Output: one combined planning brief whose sections contain the sentences from every mode.
-- Cost: `N × path_base + sum of per-mode crazy adds` (the multiple of a single crazy-mode spend).
+- Cost: sum of each mode’s individual crazy-mode price (see Pricing above).
 
 Ethos floor is preserved across all modes. The host is instructed to follow every ROLE as co-equal expertise (RACI-style).
 
@@ -32,7 +50,7 @@ The feature lives in the main product repo:
 - https://github.com/pikk-qxbin/MCPqxbin
 - Commits:
   - `2b25654` — multi-crazy resolution in `crazy_scale.py` (`resolve_crazies` handles any word)
-  - `8f5f75d` — multi-aware pricing in `pricing_layer.py`
+  - `8f5f75d` — multi-aware pricing in `pricing_layer.py` (sum of per-mode costs)
   - `17e9198` — generate-and-stack in `prompt_tools_install.py` (Edge, Cloud, Controlled)
 
 Railway redeploy of MCPqxbin is required before the live connector at `mcp.infinityblip.com` sees the new behaviour.
@@ -89,22 +107,22 @@ Example: the word Crazy combines C-R-A-Z-Y (5 modes). Output one combined brief 
 ```
 generate_optimal_prompt(
   goal="…",
-  crazy="Rupesh",          # expands to R+U+P+E+S+H
-  confirm_qx=<multiplied total>
+  crazy="Rupesh",          # expands to R+U+P+E+S+H → 12 Qx on Edge
+  confirm_qx=12
 )
 ```
 
 ```
 generate_optimal_prompt(
   goal="…",
-  crazy="Sky",             # expands to S+K+Y
-  confirm_qx=<multiplied total>
+  crazy="Sky",             # expands to S+K+Y → 6 Qx on Edge
+  confirm_qx=6
 )
 ```
 
 Same parameter works on `generate_ensemble_prompt` and `generate_controlled_prompt`.
 
-Mesh tool wrapper still treats `crazy` as a single letter for generation (pricing already multiplies). Full Mesh stacking can be added in a follow-up.
+Mesh tool wrapper still treats `crazy` as a single letter for generation (pricing already sums the modes). Full Mesh stacking can be added in a follow-up.
 
 ---
 
