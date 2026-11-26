@@ -2,17 +2,28 @@
 
 **Connecting repo** for the multi-crazy combining mode.
 
-When you pass a multi-letter string as `crazy` (for example `crazy="CRAZY"`), Infinity Blip expands it to the individual letters, generates one planning brief per letter, and stacks every section into a single ultra-huge combined brief.
+This is a versatile feature: any multi-letter string passed as `crazy` is expanded to its individual letters and their crazy modes. Each letter contributes its own ROLE, reasoning spine, structure, constraints, and ethos. All of them are stacked into one ultra-huge combined planning brief.
+
+## Examples
+
+| Word you pass | Modes combined | Count |
+|---------------|----------------|-------|
+| `crazy="CRAZY"` | C + R + A + Z + Y | 5 |
+| `crazy="Rupesh"` | R + U + P + E + S + H | 6 |
+| `crazy="Sky"` | S + K + Y | 3 |
+| `crazy="MESH"` | M + E + S + H | 4 |
+
+Letters are upper-cased, non-letters ignored, and duplicates removed while preserving order. Unknown letters are skipped. A single letter still behaves as the normal A-Z dial.
 
 ## How it works
 
-- Input: `crazy="CRAZY"` (or any string of A-Z letters, or a list).
-- Expansion: C, R, A, Z, Y.
+- Input: any multi-letter string (or a list of letters).
+- Expansion: each letter becomes its own crazy mode (A = conventional, B-Z = unconventional tilt with its named step).
 - Generation: one Edge / Cloud / Controlled brief per letter (each with its own ROLE type and atoms).
 - Output: one combined planning brief whose sections contain the sentences from every mode.
 - Cost: `N × path_base + sum of per-mode crazy adds` (the multiple of a single crazy-mode spend).
 
-Ethos floor is preserved. The host is still instructed to follow every ROLE as co-equal expertise (RACI-style).
+Ethos floor is preserved across all modes. The host is instructed to follow every ROLE as co-equal expertise (RACI-style).
 
 ## Live implementation
 
@@ -20,7 +31,7 @@ The feature lives in the main product repo:
 
 - https://github.com/pikk-qxbin/MCPqxbin
 - Commits:
-  - `2b25654` — multi-crazy resolution in `crazy_scale.py`
+  - `2b25654` — multi-crazy resolution in `crazy_scale.py` (`resolve_crazies` handles any word)
   - `8f5f75d` — multi-aware pricing in `pricing_layer.py`
   - `17e9198` — generate-and-stack in `prompt_tools_install.py` (Edge, Cloud, Controlled)
 
@@ -78,7 +89,15 @@ Example: the word Crazy combines C-R-A-Z-Y (5 modes). Output one combined brief 
 ```
 generate_optimal_prompt(
   goal="…",
-  crazy="CRAZY",
+  crazy="Rupesh",          # expands to R+U+P+E+S+H
+  confirm_qx=<multiplied total>
+)
+```
+
+```
+generate_optimal_prompt(
+  goal="…",
+  crazy="Sky",             # expands to S+K+Y
   confirm_qx=<multiplied total>
 )
 ```
